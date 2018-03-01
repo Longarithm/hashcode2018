@@ -45,7 +45,7 @@ struct Ride {
   int st, ft;
 
   void read() {
-    scanf("%d%d%d%d%d%d", &s.x, &s.y, &f.x, &f.y, &st, &ft);
+    assert(scanf("%d%d%d%d%d%d", &s.x, &s.y, &f.x, &f.y, &st, &ft));
   }
 
   bool operator <(const Ride & r) const {
@@ -108,6 +108,7 @@ bool all_used_once() {
 }
 
 bool print_output(const string &filename) {
+    assert(filename == "");
     //assert(freopen(filename.c_str(), "r", stdout));
     if (!all_used_once()) {
         return false;
@@ -143,6 +144,8 @@ bool print_output(const string &filename) {
 }
 
 int main(int argc, char **argv) {
+    eprintf("Started validating\n");
+    assert(argc == 3);
     string test_file(argv[1]), input_file(argv[2]), output_file("");
 
     if (!read_test(test_file)) {
