@@ -60,14 +60,15 @@ struct Pnt {
 
 struct Ride {
   Pnt s, f;
-  int st, ft;
+  int ts, tf;
+  int num;
 
   void read() {
-    scanf("%d%d%d%d%d%d", &s.x, &s.y, &f.x, &f.y, &st, &ft);
+    scanf("%d%d%d%d%d%d", &s.x, &s.y, &f.x, &f.y, &ts, &tf);
   }
 
   bool operator <(const Ride & r) const {
-    return st < r.st;
+    return ts < r.ts;
   }
 };
 
@@ -79,27 +80,60 @@ int r, c, f, n, b, t;
 Ride rides[maxn];
 
 bool read() {
-  if (scanf("%d%d%d%d%d%d", &r, &c, &f, &b, &n, &t) < 6) {
+  if (scanf("%d%d%d%d%d%d", &r, &c, &f, &n, &b, &t) < 6) {
     return false;
   }
   for (int i = 0; i < n; ++i) {
     rides[i].read();
+    rides[i].num = i;
   }
   return true;
 }
 
-vector<int> 
+vector<int> ans[maxf];
+Pnt pos[maxf];
+int tfree[maxf];
 
 void solve() {
+  for (int i = 0; i < f; ++i) {
+    ans[i].clear();
+    pos[i] = Pnt(0, 0);
+    tfree[i] = 0;
+  }
+
+  sort(rides, rides + n);
+  for (int i = 0; i < n; ++i) {
+    int chosen = -1, chtget = -1;
+    for (int j = 0; j < f; ++j) {
+      int tget = max(rides[i].ts, tfree[j] + pos[j].dist(rides[i].s));
+      if (tget + rides[i].s.dist(rides[i].f) <= rides[i].tf
+         && (chosen == -1 || tget < chtget || (tget == chtget && tfree[j] > tfree[chosen]))) {
+        chosen = j;
+        chtget = tget;
+      }
+    }
+
+    if (chosen == -1) {
+      continue;
+    }
+
+    ans[chosen].pb(rides[i].num);
+    tfree[chosen] = chtget + rides[i].s.dist(rides[i].f);
+    pos[chosen] = rides[i].f;
+  }
+
+  for (int i = 0; i < f; ++i) {
+    printf("%d", sz(ans[i]));
+    for (int j = 0; j < sz(ans[i]); ++j) {
+      printf(" %d", ans[i][j]);
+    }
+    printf("\n");
+  }
 }
 
 int main() {
   srand(rdtsc());
   precalc();
-#ifdef LOCAL 
-  assert(freopen(TASK".out", "w", stdout));
-  assert(freopen(TASK".in", "r", stdin));
-#endif
 
   while (true) {
     if (!read()) {
