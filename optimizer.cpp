@@ -314,14 +314,13 @@ void solve(string nameIn, string nameOut, string nameAns) {
     int cnt = 0;
     while (solution.insertLongest()) {
         cnt++;
-        if (cnt > 0) {
-            break;
+        if (cnt % 100 == 0) {
+            ofstream ans(nameAns);
+            solution.write(ans);
+            ans.close();
         }
     }
 
-    ofstream ans(nameAns);
-    solution.write(ans);
-    ans.close();
 }
 
 int main(int argc, char** argv) {
