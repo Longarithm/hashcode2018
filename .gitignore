@@ -1,0 +1,13 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+# Ignore .exe-files (for Windows builds)
+*.exe
+
+### Above combination will ignore all files without extension and *.exe files###
