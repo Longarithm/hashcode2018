@@ -197,11 +197,27 @@ struct Solution {
     }
 
     Route tryAllInsertions(const Route& route, const int rideId) {
+        vector<int> rideIndices = route.getIndices();
+        rideIndices.push_back(rideId);
+        Route best;
+        for (int i = rideIndices.size() - 1; i >= 0; --i) {
+            Route cur;
+            cur.constructByIndices(rideIndices);
+            if (cur.cost > best.cost) {
+                best = std::move(cur);
+            }
+            if (i > 0) {
+                swap(rideIndices[i], rideIndices[i - 1]);
+            }
+        }
+
+        return best;
     }
 
     bool insertLongest() {
         int found = -1;
         for (auto x : unassigned) {
+            cerr << "Watching " << x << '\n';
             bool succ = false;
             for (int i = 0; i < routes.size(); ++i) {
                 Route newRoute = tryAllInsertions(routes[i], x);
@@ -240,9 +256,11 @@ void readTask(string nameIn, string nameOut) {
         rides[i].read(i, in);
         unassigned.insert(i);
     }
+    cerr << "Task read\n";
 
     Solution solution;
     solution.read(out);
+    cerr << "Solution read\n";
 
     while (solution.insertLongest()) {
     }
@@ -255,7 +273,7 @@ int main(int argc, char** argv) {
     //freopen("", "w", stderr);
 #endif
     if (argc != 3) {
-        cerr << "Format: opimizer <in> <out>\n";
+        cerr << "Format: optimizer <in> <out>\n";
         return -1;
     }
 
