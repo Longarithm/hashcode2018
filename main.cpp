@@ -78,6 +78,8 @@ const int maxf = 1010;
 
 int r, c, f, n, b, t;
 Ride rides[maxn];
+int inv[maxn];
+bool used[maxn];
 
 bool read() {
   if (scanf("%d%d%d%d%d%d", &r, &c, &f, &n, &b, &t) < 6) {
@@ -91,60 +93,169 @@ bool read() {
 }
 
 vector<int> ans[maxf];
-Pnt pos[maxf];
-int tfree[maxf];
+vector<int> score[maxf];
+vector<Pnt> pos[maxf];
+vector<int> tfree[maxf];
+
+int gettget(int t, Pnt p, int num) {
+  t = max(rides[num].ts, t + p.dist(rides[num].s));
+  if (t + rides[num].s.dist(rides[num].f) > rides[num].tf) {
+    return -1;
+  }
+  return t;
+}
 
 void solve() {
   for (int i = 0; i < f; ++i) {
     ans[i].clear();
-    pos[i] = Pnt(0, 0);
-    tfree[i] = 0;
+    score[i].clear();
+    pos[i].clear();
+    tfree[i].clear();
+    pos[i].pb(Pnt(0, 0));
+    tfree[i].pb(0);
   }
 
   sort(rides, rides + n);
   for (int i = 0; i < n; ++i) {
-    int chosen = -1, chtget = -1;
-    for (int j = 0; j < f; ++j) {
-      int tget = max(rides[i].ts, tfree[j] + pos[j].dist(rides[i].s));
-      if (tget + rides[i].s.dist(rides[i].f) <= rides[i].tf
-         && (chosen == -1 || tget < chtget || (tget == chtget && tfree[j] > tfree[chosen]))) {
-        chosen = j;
-        chtget = tget;
+    inv[rides[i].num] = i;
+  }
+  memset(used, 0, sizeof(used));
+
+  for (int it = 0; it < 100; ++it) {
+    for (int i = 0; i < n; ++i) {
+      if (used[i]) {
+        continue;
+      }
+      int ridelen = rides[i].s.dist(rides[i].f);
+
+      int chosen = -1, chtget = -1, chscore = -1;
+      for (int j = 0; j < f; ++j) {
+        int ctfree = *tfree[j].rbegin();
+        Pnt cpos = *pos[j].rbegin();
+        int tget = gettget(ctfree, cpos, i);
+        if (tget != -1) {
+          int score = ridelen + (tget == rides[i].ts ? b : 0);
+          //        if (chosen == -1 || score > chscore || (score == chscore && (ctfree > (*tfree[chosen].rbegin())))) {
+          if (chosen == -1 || tget < chtget || (tget == chtget && (ctfree > (*tfree[chosen].rbegin())))) {
+            chosen = j;
+            chtget = tget;
+            chscore = score;
+          }
+        }
+        }
+
+        if (chosen != -1) {
+          ans[chosen].pb(rides[i].num);
+          score[chosen].pb(ridelen + (chtget == rides[i].ts ? b : 0));
+          tfree[chosen].pb(chtget + ridelen);
+          pos[chosen].pb(rides[i].f);
+          used[i] = true;
+        } else {
+          if (it == 0) {
+            continue;
+          }
+          int chosen = -1, chtget = -1, chk = -1, chdiff = 0;
+          for (int j = 0; j < f; ++j) {
+            int diff = 0;
+            for (int k = sz(tfree[j]) - 2; k >= 0; --k) {
+              diff -= score[j][k];
+              int ctfree = tfree[j][k];
+              Pnt cpos = pos[j][k];
+              int tget = gettget(ctfree, cpos, i);
+              if (tget != -1) {
+                int cscore = ridelen + (tget == rides[i].ts ? b : 0);
+
+                int ntfree = tget + ridelen;
+                Pnt npos = rides[i].f;
+                for (int l = k; l < sz(ans[j]); ++l) {
+                  int ci = inv[ans[j][l]];
+                  int ntget = gettget(ntfree, npos, ci);
+                  if (ntget != -1) {
+                    int nridelen = rides[ci].s.dist(rides[ci].f);
+                    cscore += nridelen + (ntget == rides[ci].ts ? b : 0);
+                    ntfree = ntget + nridelen;
+                    npos = rides[ci].f;
+                  }
+                }
+
+                if (cscore + diff > chdiff) {
+                  chosen = j;
+                  chk = k;
+                  chtget = tget;
+                  chdiff = diff + cscore;
+                }
+                break;
+              }
+            }
+          }
+
+          if (chosen != -1) {
+            vector<int> tmp;
+            tmp.clear();
+            while (sz(tfree[chosen]) - 1 > chk) {
+              tfree[chosen].pop_back();
+              pos[chosen].pop_back();
+              score[chosen].pop_back();
+              tmp.pb(*ans[chosen].rbegin());
+              ans[chosen].pop_back();
+            }
+            reverse(tmp.begin(), tmp.end());
+
+            ans[chosen].pb(rides[i].num);
+            score[chosen].pb(ridelen + (chtget == rides[i].ts ? b : 0));
+            tfree[chosen].pb(chtget + ridelen);
+            pos[chosen].pb(rides[i].f);
+            used[i] = true;
+
+            for (int l = 0; l < sz(tmp); ++l) {
+              int ctfree = *tfree[chosen].rbegin();
+              Pnt cpos = *pos[chosen].rbegin();
+              int ci = inv[tmp[l]];
+              used[ci] = false;
+              int ctget = gettget(ctfree, cpos, ci);
+              if (ctget != -1) {
+                int cridelen = rides[ci].s.dist(rides[ci].f);
+
+                ans[chosen].pb(rides[ci].num);
+                score[chosen].pb(cridelen + (ctget == rides[ci].ts ? b : 0));
+                tfree[chosen].pb(ctget + cridelen);
+                pos[chosen].pb(rides[ci].f);
+                used[ci] = true;
+              }
+            }
+          }
+        }
       }
     }
 
-    if (chosen == -1) {
-      continue;
+    int sum = 0;
+
+    for (int i = 0; i < f; ++i) {
+      printf("%d", sz(ans[i]));
+      for (int j = 0; j < sz(ans[i]); ++j) {
+        sum += score[i][j];
+        printf(" %d", ans[i][j]);
+      }
+      printf("\n");
     }
 
-    ans[chosen].pb(rides[i].num);
-    tfree[chosen] = chtget + rides[i].s.dist(rides[i].f);
-    pos[chosen] = rides[i].f;
+    eprintf("%d\n", sum);
   }
 
-  for (int i = 0; i < f; ++i) {
-    printf("%d", sz(ans[i]));
-    for (int j = 0; j < sz(ans[i]); ++j) {
-      printf(" %d", ans[i][j]);
-    }
-    printf("\n");
-  }
-}
+  int main() {
+    srand(rdtsc());
+    precalc();
 
-int main() {
-  srand(rdtsc());
-  precalc();
-
-  while (true) {
-    if (!read()) {
-      break;
-    }
-    solve();
+    while (true) {
+      if (!read()) {
+        break;
+      }
+      solve();
 #ifdef DEBUG
-    eprintf("Time %.2f\n", (double) clock() / CLOCKS_PER_SEC);
+      eprintf("Time %.2f\n", (double) clock() / CLOCKS_PER_SEC);
 #endif
+    }
+    return 0;
   }
-  return 0;
-}
 
 
