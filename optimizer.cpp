@@ -142,7 +142,7 @@ struct Route {
 
         auto rem = constructByIndices(rideIndices);
 
-        assert(rem.size() == 0);
+        //assert(rem.size() == 0);
     }
 
     vector<int> constructByIndices(const vector<int>& rideIndices) {
@@ -156,13 +156,21 @@ struct Route {
         Pnt pos(0, 0);
         int time = 0;
         cost = 0;
+        orders.clear();
 
         forn(i, rideIndices.size()) {
             const Ride& ride = rides[rideIndices[i]];
             int timeBefore = time;
             time += ride.s.dist(pos);
             int timeStart = max(time, ride.st);
+            time = timeStart;
             time += ride.cost;
+            /*
+            if (ride.id == 3696) {
+                cerr << "Ride3696 " << timeBefore << ' ' << time << '\n';
+                cerr << ride.st << ' ' << ride.ft << ' ' << ride.cost << '\n';
+            }*/
+
             if (time > ride.ft) {
                 time = timeBefore;
                 continue;
@@ -239,7 +247,7 @@ struct Solution {
         vector<int> unassignedLongest(unassigned.begin(), unassigned.end());
         sort(unassignedLongest.begin(), unassignedLongest.end(), compareByCost);
         for (auto x : unassignedLongest) {
-            cerr << "Watching " << x << '\n';
+//            cerr << "Watching " << x << '\n';
             bool succ = false;
             for (int i = 0; i < routes.size(); ++i) {
                 Route newRoute = tryAllInsertions(routes[i], x);
@@ -297,7 +305,7 @@ void solve(string nameIn, string nameOut, string nameAns) {
     int cnt = 0;
     while (solution.insertLongest()) {
         cnt++;
-        if (cnt > 100) {
+        if (cnt > 0) {
             break;
         }
     }
