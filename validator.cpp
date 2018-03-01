@@ -92,9 +92,12 @@ bool read_answer(const string &filename) {
     fclose(stdin);
     return true;
 }
+    
+vi who;
 
 bool all_used_once() {
-    vi who(n, -1);
+    who.clear();
+    who.resize(n, -1);
     forn(i, f) {
         for (auto id: taken[i]) {
             if (who[id] != -1) {
@@ -114,6 +117,16 @@ bool print_output(const string &filename) {
         return false;
     }
 
+    int bonuses = 0;
+    int failed_rides = 0;
+    ll failed_dists = 0;
+    forn(id, n) {
+        if (who[id] == -1) {
+            failed_rides++;
+            failed_dists += dist(rides[id].s, rides[id].f);
+        }
+    } 
+
     ll points = 0;
     forn(i, f) {
         Pnt cur_pos(0, 0);
@@ -124,7 +137,10 @@ bool print_output(const string &filename) {
                 cur_time = rides[id].st;
             }
 
-            points += 1ll * (cur_time == rides[id].st) * b;
+            if (cur_time == rides[id].st) {
+                bonuses++;
+                points += b;
+            }
             
             cur_time += dist(rides[id].s, rides[id].f);
             if (cur_time > rides[id].ft) {
@@ -139,7 +155,9 @@ bool print_output(const string &filename) {
     }
 
     eprintf("GOT %lld points!\n", points);
-
+    eprintf("STATS:\n");
+    eprintf("used %lld bonuses, failed %lld rides, failed %lld dists\n", bonuses, failed_rides, failed_dists);
+    
     return true;
 }
 
