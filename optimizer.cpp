@@ -177,7 +177,7 @@ struct Route {
             }
 
             pos = ride.f;
-            if (time >= steps) {
+            if (time > steps) {
                 vector<int> res;
                 for(int j = i; j < rideIndices.size(); ++j) {
                     res.push_back(rideIndices[j]);
@@ -222,6 +222,14 @@ struct Solution {
         forn(vehicle, vehiclesCount) {
             routes[vehicle].read(in);
         }
+    }
+
+    int getCost() {
+        int res = 0;
+        for (auto& x : routes) {
+            res += x.cost;
+        }
+        return res;
     }
 
     Route tryAllInsertions(const Route& route, const int rideId) {
@@ -301,6 +309,7 @@ void solve(string nameIn, string nameOut, string nameAns) {
     Solution solution;
     solution.read(out);
     cerr << "Solution read\n";
+    cerr << "Total cost " << solution.getCost() << '\n';
 
     int cnt = 0;
     while (solution.insertLongest()) {
