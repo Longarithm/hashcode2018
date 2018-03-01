@@ -36,6 +36,10 @@ struct Pnt {
   }
 };
 
+int dist(const Pnt &p, const Pnt &q) {
+    return p.dist(q);
+}
+
 struct Ride {
   Pnt s, f;
   int st, ft;
@@ -94,7 +98,7 @@ bool all_used_once() {
     forn(i, f) {
         for (auto id: taken[i]) {
             if (who[id] != -1) {
-                eprintf("Error: cars %d and %d are pretending on the same path %d\n", who[id], i, id);
+                eprintf("Error: cars %d and %d are pretending on the same ride %d\n", who[id], i, id);
                 return false;
             }
             who[id] = i;
@@ -104,15 +108,42 @@ bool all_used_once() {
 }
 
 bool print_output(const string &filename) {
-    assert(freopen(filename.c_str(), "r", stdout));
+    //assert(freopen(filename.c_str(), "r", stdout));
     if (!all_used_once()) {
         return false;
     }
+
+    ll points = 0;
+    forn(i, f) {
+        Pnt cur_pos(0, 0);
+        ll cur_time = 0;
+        for (auto id: taken[i]) {
+            cur_time += dist(cur_pos, rides[id].s);
+            if (cur_time < rides[id].st) {
+                cur_time = rides[id].st;
+            }
+
+            points += 1ll * (cur_time == rides[id].st) * b;
+            
+            cur_time += dist(rides[id].s, rides[id].f);
+            if (cur_time > rides[id].ft) {
+                eprintf("Error: car %d arrived to the final point of ride %d at time %lld, want %d\n", i, id, cur_time, rides[id].ft);
+                return false;
+            }
+
+            points += dist(rides[id].s, rides[id].f);
+
+            cur_pos = rides[id].f;
+        }
+    }
+
+    eprintf("GOT %lld points!\n", points);
+
     return true;
 }
 
 int main(int argc, char **argv) {
-    string test_file(argv[1]), input_file(argv[2]), output_file(argv[3]);
+    string test_file(argv[1]), input_file(argv[2]), output_file("");
 
     if (!read_test(test_file)) {
         eprintf("Error during reading testdata!");
