@@ -11,6 +11,6 @@ for f in glob('*.in'):
         system('./validator %s %s' % (f, f[:-3] + '.out'))
 
 if os.name == 'nt':
-    system('del validator')
+    system('del validator.exe')
 else:
     system('rm validator')
