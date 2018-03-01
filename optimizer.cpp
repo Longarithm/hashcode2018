@@ -97,7 +97,7 @@ struct Ride {
 };
 
 bool compareByCost(const int a, const int b) {
-    return rides[a].cost < rides[b].cost;
+    return rides[a].cost > rides[b].cost;
 }
 
 
