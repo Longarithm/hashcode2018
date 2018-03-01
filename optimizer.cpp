@@ -43,6 +43,7 @@ set<int> unassigned;
 struct Ride;
 vector<Ride> rides;
 
+
 struct Pnt {
     int x, y;
 
@@ -95,6 +96,11 @@ struct Ride {
     }
 };
 
+bool compareByCost(const int a, const int b) {
+    return rides[a].cost < rides[b].cost;
+}
+
+
 struct Order {
     int startTime;
 //        int endTime;
@@ -140,17 +146,30 @@ struct Route {
     }
 
     vector<int> constructByIndices(const vector<int>& rideIndices) {
+        /*
+        cerr << "ConstructByIndices ";
+        for (auto x : rideIndices) {
+            cerr << x << ' ';
+        }
+        cerr << '\n';*/
+
         Pnt pos(0, 0);
         int time = 0;
         cost = 0;
 
         forn(i, rideIndices.size()) {
             const Ride& ride = rides[rideIndices[i]];
+            int timeBefore = time;
             time += ride.s.dist(pos);
-            int timeStart = time;
+            int timeStart = max(time, ride.st);
             time += ride.cost;
+            if (time > ride.ft) {
+                time = timeBefore;
+                continue;
+            }
+
             pos = ride.f;
-            if (time > steps) {
+            if (time >= steps) {
                 vector<int> res;
                 for(int j = i; j < rideIndices.size(); ++j) {
                     res.push_back(rideIndices[j]);
@@ -158,6 +177,7 @@ struct Route {
 
                 return res;
             }
+//            cerr << i << ' ' << timeStart << ' ' << time << '\n';
 
             if (timeStart == ride.st) {
                 cost += bonus;
@@ -216,12 +236,15 @@ struct Solution {
 
     bool insertLongest() {
         int found = -1;
-        for (auto x : unassigned) {
+        vector<int> unassignedLongest(unassigned.begin(), unassigned.end());
+        sort(unassignedLongest.begin(), unassignedLongest.end(), compareByCost);
+        for (auto x : unassignedLongest) {
             cerr << "Watching " << x << '\n';
             bool succ = false;
             for (int i = 0; i < routes.size(); ++i) {
                 Route newRoute = tryAllInsertions(routes[i], x);
                 if (newRoute.cost > routes[i].cost) {
+                    cerr << "Found " << newRoute.cost - routes[i].cost << '\n';
                     for (auto y : routes[i].getIndices()) {
                         unassigned.insert(y);
                     }
@@ -232,7 +255,6 @@ struct Solution {
 
                     routes[i] = newRoute;
                     succ = true;
-                    cerr << "Found " << newRoute.cost - routes[i].cost << '\n';
                     break;
                 }
             }
@@ -245,9 +267,19 @@ struct Solution {
 
         return found != -1;
     }
+    void write(ostream& ans) {
+        for (const auto& route : routes) {
+            const auto& indices = route.getIndices();
+            ans << indices.size() << ' ';
+            for (auto x : indices) {
+                ans << x << ' ';
+            }
+            ans << '\n';
+        }
+    }
 };
 
-void readTask(string nameIn, string nameOut) {
+void solve(string nameIn, string nameOut, string nameAns) {
     ifstream in(nameIn);
     ifstream out(nameOut);
     in >> rows >> columns >> vehiclesCount >> ridesCount >> bonus >> steps;
@@ -262,8 +294,17 @@ void readTask(string nameIn, string nameOut) {
     solution.read(out);
     cerr << "Solution read\n";
 
+    int cnt = 0;
     while (solution.insertLongest()) {
+        cnt++;
+        if (cnt > 100) {
+            break;
+        }
     }
+
+    ofstream ans(nameAns);
+    solution.write(ans);
+    ans.close();
 }
 
 int main(int argc, char** argv) {
@@ -272,14 +313,15 @@ int main(int argc, char** argv) {
     //freopen("", "w", stdout);
     //freopen("", "w", stderr);
 #endif
-    if (argc != 3) {
-        cerr << "Format: optimizer <in> <out>\n";
+    if (argc != 4) {
+        cerr << "Format: optimizer <in> <out> <ans>\n";
         return -1;
     }
 
     string fileIn(argv[1]);
     string fileOut(argv[2]);
-    readTask(fileIn, fileOut);
+    string fileAns(argv[3]);
+    solve(fileIn, fileOut, fileAns);
     
     return 0;
 }
