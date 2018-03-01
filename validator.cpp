@@ -156,7 +156,7 @@ bool print_output(const string &filename) {
 
     eprintf("GOT %lld points!\n", points);
     eprintf("STATS:\n");
-    eprintf("used %lld bonuses, failed %lld rides, failed %lld dists\n", (ll)bonuses, (ll)failed_rides, failed_dists);
+    eprintf("used %lld bonuses, failed %lld rides, LOST %lld points\n", (ll)bonuses, (ll)failed_rides, (ll)(n - bonuses) * b + failed_dists);
     
     return true;
 }
