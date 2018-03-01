@@ -93,6 +93,7 @@ bool read() {
 vector<int> ans[maxf];
 Pnt pos[maxf];
 int tfree[maxf];
+bool used[maxn];
 
 void solve() {
   for (int i = 0; i < f; ++i) {
@@ -101,27 +102,31 @@ void solve() {
     tfree[i] = 0;
   }
 
-  sort(rides, rides + n);
-  for (int i = 0; i < n; ++i) {
-    int chosen = -1, chtget = -1;
-    for (int j = 0; j < f; ++j) {
-      int tget = max(rides[i].ts, tfree[j] + pos[j].dist(rides[i].s));
-      if (tget + rides[i].s.dist(rides[i].f) <= rides[i].tf
-         && (chosen == -1 || tget < chtget || (tget == chtget && tfree[j] > tfree[chosen]))) {
-        chosen = j;
-        chtget = tget;
-      }
-    }
-
-    if (chosen == -1) {
-      continue;
-    }
-
-    ans[chosen].pb(rides[i].num);
-    tfree[chosen] = chtget + rides[i].s.dist(rides[i].f);
-    pos[chosen] = rides[i].f;
+  bool flag = true;
+  while (flag) {
+  	flag = false;
+	for (int i = 0; i < f; i++) {
+	  long long dist = 1e9;
+	  int opt = -1;
+	  for (int j = 0; j < n; j++) {
+        if (!used[j]) {
+          int tm = max(tfree[i] + pos[i].dist(rides[j].s), rides[j].ts) + rides[j].s.dist(rides[j].f);
+          if (tm > rides[j].tf) continue;
+          if (pos[i].dist(rides[j].s) < dist) {
+          	dist = pos[i].dist(rides[j].s);
+          	opt = j;
+          }
+        }
+	  }
+	  if (opt != -1) {
+	  	flag = true;
+	    ans[i].push_back(opt);
+	    used[opt] = true;
+	    tfree[i] = max(tfree[i] + pos[i].dist(rides[opt].s), rides[opt].ts) + rides[opt].s.dist(rides[opt].f);
+	    pos[i] = rides[opt].f;
+	  }
+	}
   }
-
   for (int i = 0; i < f; ++i) {
     printf("%d", sz(ans[i]));
     for (int j = 0; j < sz(ans[i]); ++j) {
@@ -134,6 +139,8 @@ void solve() {
 int main() {
   srand(rdtsc());
   precalc();
+  freopen("c_no_hurry.in", "r", stdin);
+  freopen("c_no_hurry.out", "w", stdout);
 
   while (true) {
     if (!read()) {
